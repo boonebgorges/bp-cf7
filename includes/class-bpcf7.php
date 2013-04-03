@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file contains a number of (increasingly complex) implementations of
+ * BP_Group_Extension integrations of Contact Form 7 into BuddyPress groups.
+ *
+ * For more details, see:
+ * - my BuddyCamp presentation:
+ * - the BP_Group_Extension codex page: http://codex.buddypress.org/developer/plugin-development/group-extension-api/
+ */
+
 if ( class_exists( 'BP_Group_Extension' ) ) :
 
 	/**
