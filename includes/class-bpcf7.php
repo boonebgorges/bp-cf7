@@ -183,9 +183,123 @@ if ( class_exists( 'BP_Group_Extension' ) ) :
 			echo do_shortcode( $shortcode );
 		}
 	}
-	bp_register_group_extension( 'BPCF7_3' );
+	//bp_register_group_extension( 'BPCF7_3' );
 
+	/**
+	 * BPCF7_3, with some extras
+	 */
+	class BPCF7_4 extends BP_Group_Extension {
+		public function __construct() {
+			$this->name = __( 'Contact Forms', 'bp-cf7' );
+			$this->slug = 'contact-forms';
 
+			// Don't need a Create step?
+			$this->enable_create_item = false;
+
+			// Move your Dashboard metabox around
+			$this->admin_metabox_context = 'side';
+
+			// Custom access
+			$this->enable_nav_item = $this->enable_nav_item();
+
+			// Load template files from a different theme location
+			$this->template_file = '/bp-cf7/foo';
+
+			$this->group_id = bp_get_current_group_id();
+			if ( ! $this->group_id ) {
+				$this->group_id = bp_get_new_group_id();
+			}
+		}
+
+		public function enable_nav_item() {
+			return true;
+		}
+
+		protected function get_form_id() {
+			$group_id = $this->group_id;
+			$form_id = groups_get_groupmeta( $group_id, 'cf7_form_id' );
+
+			if ( ! $form_id )
+				$form_id = 318;
+
+			return $form_id;
+		}
+
+		protected function form() {
+			$form_id = $this->get_form_id();
+			?>
+
+			<label for="cf7_form_id"><?php _e( 'Form ID', 'bp-cf7' ) ?></label>
+			<input id="cf7_form_id" name="cf7_form_id" value="<?php echo esc_attr( $form_id ) ?>" />
+			<?php
+		}
+
+		protected function form_save() {
+			$form_id = intval( $_POST['cf7_form_id'] );
+			return groups_update_groupmeta( $this->group_id, 'cf7_form_id', $form_id );
+		}
+
+		public function edit_screen() {
+			?><h2><?php echo esc_html( $this->name ) ?></h2><?php
+			$this->form();
+			echo '<input type="submit" value="' . __( 'Submit', 'bp-cf7' ) . '" />';
+			wp_nonce_field( 'groups_edit_save_' . $this->slug );
+		}
+
+		public function edit_screen_save() {
+			if ( ! isset( $_POST['cf7_form_id'] ) )
+				return;
+
+			check_admin_referer( 'groups_edit_save_' . $this->slug );
+
+			if ( $this->form_save() )
+				bp_core_add_message( __( 'Yes!', 'bp-cf7' ) );
+			else
+				bp_core_add_message( __( 'Sadface.', 'bp-cf7' ), 'error' );
+
+			bp_core_redirect( bp_get_group_permalink( groups_get_current_group() ) . '/admin/' . $this->slug . '/' );
+		}
+
+		public function create_screen() {
+			if ( ! bp_is_group_creation_step( $this->slug ) ) {
+				return;
+			}
+
+			?><h2><?php echo esc_html( $this->name ) ?></h2><?php
+
+			$this->form();
+			wp_nonce_field( 'groups_create_save_' . $this->slug );
+		}
+
+		public function create_screen_save() {
+			if ( ! isset( $_POST['cf7_form_id'] ) )
+				return;
+
+			$this->group_id = intval( $_POST['group_id'] );
+
+			check_admin_referer( 'groups_create_save_' . $this->slug );
+
+			$this->form_save();
+		}
+
+		public function admin_screen( $group_id ) {
+			$this->group_id = intval( $group_id );
+			$this->form();
+		}
+
+		public function admin_screen_save( $group_id ) {
+			$this->group_id = intval( $group_id );
+			$this->form_save();
+		}
+
+		public function display() {
+			$form_id = $this->get_form_id();
+			echo '<h2>' . __( 'Contact', 'bp-cf7' ) . '</h2>';
+			$shortcode = '[contact-form-7 id="' . intval( $form_id ) . '" title="My Group Form"]';
+			echo do_shortcode( $shortcode );
+		}
+	}
+	bp_register_group_extension( 'BPCF7_4' );
 
 endif; // class_exists( 'BP_Group_Extension' )
 
